@@ -22,50 +22,46 @@
     state: directory
   register: containerd_dir
 
-- name: Get defaults from containerd.
-  command: containerd config default
-  changed_when: false
-  register: containerd_config_default
-  when: containerd_config_default_write
-
-- name: Prepare containerd/config.toml from default config
-  copy:
-    dest: /tmp/containerd_config.toml
-    content: "{{ containerd_config_default.stdout }}"
-  when: containerd_config_default_write
-  changed_when: false
-
-- name: Set Cgroup driver to systemd
-  lineinfile:
-    insertafter: '.*\[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options\]$'
-    line: '          SystemdCgroup = true'
-    state: present
-    path: /tmp/containerd_config.toml
-  when: containerd_config_default_write and containerd_config_cgroup_driver_systemd
-  changed_when: false
-
-- name: Make sure  SystemdCgroup = false is not set
-  ansible.builtin.lineinfile:
-    path: /tmp/containerd_config.toml
-    state: absent
-    line: '            SystemdCgroup = false'
-  notify: restart containerd
-  when: containerd_config_default_write and containerd_config_cgroup_driver_systemd
-  changed_when: false
-
-- name: Copy config.toml to /etc/containerd
-  copy:
-    remote_src: true
-    src: /tmp/containerd_config.toml
+- name: Create Containerd Config File
+  when: containerd_dir is succeeded
+  template:
+    src: config.toml.j2
     dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: '0644'
+  register: cointainerd_default
   notify: restart containerd
-  when: containerd_config_default_write
 
-- name: Cleanup temporary file
+- name: Create HTTP Proxy Folder
   file:
-    path: /tmp/containerd_config.toml
-    state: absent
-  changed_when: false
+    path: /etc/systemd/system/containerd.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0644'
+    recurse: true
+  register: containerd_proxy_dir
+
+- name: Create Containerd Config File
+  when: containerd_proxy_dir is succeeded
+  template:
+    src: http_proxy.conf.j2
+    dest: /etc/systemd/system/containerd.service.d/http-proxy.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: containerd_proxy
+  notify: restart containerd
+
+- name: Create HTTP_Proxy env files
+  template:
+    src: proxy_env.j2
+    dest: /etc/profile.d/proxy_vars.sh
+    owner: root
+    group: root
+    mode: '0755'
+  register: http_proxy_env
 
 - name: Ensure containerd is restarted immediately if necessary.
   meta: flush_handlers
