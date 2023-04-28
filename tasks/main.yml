@@ -59,15 +59,6 @@
   register: containerd_proxy
   notify: Restart containerd
 
-- name: Create HTTP_Proxy env files
-  ansible.builtin.template:
-    src: proxy_env.j2
-    dest: /etc/profile.d/proxy_vars.sh
-    owner: root
-    group: root
-    mode: '0755'
-  register: http_proxy_env
-
 - name: Create crictl config file
   ansible.builtin.template:
     src: crictl.yaml.j2
@@ -80,9 +71,10 @@
 - name: Replace Container Runtime in Kubelet
   ansible.builtin.lineinfile:
     path: /var/lib/kubelet/kubeadm-flags.env
-    regexp: '\sswap\s'
-    state: 'absent'
-  register: remove_swap
+    regexp: '/run/containerd/containerd.sock'
+    insertafter: 'k8s.gcr.io/pause:3.6'
+    line: ' --container-runtimeendpoint=unix:///run/containerd/containerd.sock'
+  register: change_runtime
 
 - name: Ensure containerd is restarted immediately if necessary.
   ansible.builtin.meta: flush_handlers
