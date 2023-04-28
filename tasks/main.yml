@@ -69,11 +69,12 @@
   register: crictl_conf
 
 - name: Replace Container Runtime in Kubelet
-  ansible.builtin.lineinfile:
-    path: /var/lib/kubelet/kubeadm-flags.env
-    regexp: '/run/containerd/containerd.sock'
-    insertafter: 'k8s.gcr.io/pause:3.6'
-    line: ' --container-runtimeendpoint=unix:///run/containerd/containerd.sock'
+  ansible.builtin.copy:
+    dest: /var/lib/kubelet/kubeadm-flags.env
+    content: "{{ kubelet_kubeadm_args }}"
+    owner: root
+    group: root
+    mode: '0644'
   register: change_runtime
 
 - name: Ensure containerd is restarted immediately if necessary.
