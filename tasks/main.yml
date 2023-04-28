@@ -71,11 +71,12 @@
 - name: Replace Container Runtime in Kubelet
   ansible.builtin.copy:
     dest: /var/lib/kubelet/kubeadm-flags.env
-    content: "{{ kubelet_kubeadm_args }}"
+    content: "{{ kubelet_kubeadm_args }}\\n"
     owner: root
     group: root
     mode: '0644'
   register: change_runtime
+  norify: Restart kubelet
 
 - name: Ensure containerd is restarted immediately if necessary.
   ansible.builtin.meta: flush_handlers
