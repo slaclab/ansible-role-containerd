@@ -76,7 +76,7 @@
     group: root
     mode: '0644'
   register: change_runtime
-  norify: Restart kubelet
+  notify: Restart kubelet
 
 - name: Ensure containerd is restarted immediately if necessary.
   ansible.builtin.meta: flush_handlers
