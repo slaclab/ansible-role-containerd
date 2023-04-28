@@ -1,40 +1,45 @@
 ---
-- include_tasks: setup-RedHat.yml
+- name: Run setup for RedHat Distributions
+  ansible.builtin.include_tasks: setup-RedHat.yml
   when: ansible_os_family == 'RedHat'
 
-- include_tasks: setup-Debian.yml
+- name: Run setup for Debian Distributions
+  ansible.builtin.include_tasks: setup-Debian.yml
   when: ansible_os_family == 'Debian'
 
 - name: Ensure containerd is installed.
-  package:
+  ansible.builtin.package:
     name: "{{ containerd_package }}"
     state: "{{ containerd_package_state }}"
 
 - name: Ensure containerd is started and enabled at boot.
-  service:
+  ansible.builtin.service:
     name: containerd
     state: "{{ containerd_service_state }}"
     enabled: "{{ containerd_service_enabled }}"
 
 - name: Ensure containerd config directory exists.
-  file:
+  ansible.builtin.file:
     path: /etc/containerd
     state: directory
+    owner: root
+    group: root
+    mode: '0755'
   register: containerd_dir
 
 - name: Create Containerd Config File
   when: containerd_dir is succeeded
-  template:
+  ansible.builtin.template:
     src: config.toml.j2
     dest: /etc/containerd/config.toml
     owner: root
     group: root
     mode: '0644'
   register: cointainerd_default
-  notify: restart containerd
+  notify: Restart containerd
 
 - name: Create HTTP Proxy Folder
-  file:
+  ansible.builtin.file:
     path: /etc/systemd/system/containerd.service.d
     state: directory
     owner: root
@@ -45,17 +50,17 @@
 
 - name: Create Containerd Config File
   when: containerd_proxy_dir is succeeded
-  template:
+  ansible.builtin.template:
     src: http_proxy.conf.j2
     dest: /etc/systemd/system/containerd.service.d/http-proxy.conf
     owner: root
     group: root
     mode: '0644'
   register: containerd_proxy
-  notify: restart containerd
+  notify: Restart containerd
 
 - name: Create HTTP_Proxy env files
-  template:
+  ansible.builtin.template:
     src: proxy_env.j2
     dest: /etc/profile.d/proxy_vars.sh
     owner: root
@@ -63,5 +68,21 @@
     mode: '0755'
   register: http_proxy_env
 
+- name: Create crictl config file
+  ansible.builtin.template:
+    src: crictl.yaml.j2
+    dest: /etc/crictl.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  register: crictl_conf
+
+- name: Replace Container Runtime in Kubelet
+  ansible.builtin.lineinfile:
+    path: /var/lib/kubelet/kubeadm-flags.env
+    regexp: '\sswap\s'
+    state: 'absent'
+  register: remove_swap
+
 - name: Ensure containerd is restarted immediately if necessary.
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
