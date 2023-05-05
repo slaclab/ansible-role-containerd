@@ -185,7 +185,7 @@ version = 2
     root_path = ""
 
   [plugins."io.containerd.snapshotter.v1.devmapper"]
-    root_path = "/run/containerd/devmapper"
+    root_path = "/var/lib/containerd/devmapper"
     pool_name = "vg_raid-lv_docker"
     base_image_size = "8192MB"
   [plugins."io.containerd.snapshotter.v1.native"]
