@@ -12,6 +12,11 @@
     name: "{{ containerd_package }}-{{ containerd_version }}"
     state: "{{ containerd_package_state }}"
 
+- name: Ensure crictl is installed
+  ansible.builtin.package:
+    name: cri-tools
+    state: present
+
 - name: Ensure containerd is started and enabled at boot.
   ansible.builtin.service:
     name: containerd
