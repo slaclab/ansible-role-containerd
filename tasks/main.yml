@@ -9,7 +9,7 @@
 
 - name: Ensure containerd is installed.
   ansible.builtin.package:
-    name: "{{ containerd_package }}"
+    name: "{{ containerd_package }}-{{ containerd_version }}"
     state: "{{ containerd_package_state }}"
 
 - name: Ensure containerd is started and enabled at boot.
