@@ -9,3 +9,8 @@
     name: kubelet
     state: restarted
     daemon_reload: true
+- name: Reload kubelet
+  ansible.builtin.service:
+    name: kubelet
+    state: reloaded
+    daemon_reload: true

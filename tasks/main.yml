@@ -62,7 +62,7 @@
     group: root
     mode: '0644'
   register: containerd_proxy
-  notify: Restart containerd
+  notify: Reload containerd
 
 - name: Create crictl config file
   ansible.builtin.template:
@@ -81,7 +81,20 @@
     group: root
     mode: '0644'
   register: change_runtime
-  notify: Restart kubelet
+  notify: Reload kubelet
+
+- name: Check if kubeadm has already run
+  ansible.builtin.stat:
+    path: "/etc/kubernetes/pki/ca.key"
+  register: kubeadm_ca
+
+- name: Enable and check kubelet service
+  when: kubeadm_ca.stat.exists
+  ansible.builtin.systemd:
+    name: kubelet
+    daemon_reload: true
+    state: started
+    enabled: true
 
 - name: Ensure containerd is restarted immediately if necessary.
   ansible.builtin.meta: flush_handlers
