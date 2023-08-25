@@ -29,4 +29,4 @@ docker_yum_repo_enable_nightly: '0'
 docker_yum_gpg_key: https://download.docker.com/linux/centos/gpg
 
 # Needed for running Containerd without Docker
-kubelet_kubeadm_args: KUBELET_KUBEADM_ARGS="--network-plugin=cni --pod-infra-container-image=k8s.gcr.io/pause:3.6 --container-runtime=remote --container-runtime-endpoint=unix:///run/containerd/containerd.sock --image-gc-high-threshold=80 --image-gc-low-threshold=75"
+kubelet_kubeadm_args: KUBELET_KUBEADM_ARGS="--pod-infra-container-image=k8s.gcr.io/pause:3.6 --container-runtime=remote --container-runtime-endpoint=unix:///run/containerd/containerd.sock --image-gc-high-threshold=80 --image-gc-low-threshold=75"
