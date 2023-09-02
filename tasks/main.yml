@@ -40,28 +40,37 @@
     owner: root
     group: root
     mode: '0644'
-  register: cointainerd_default
+  register: containerd_default
   notify: Restart containerd
 
-- name: Create HTTP Proxy Folder
+- name: Ensure absent HTTP Proxy Folder
   ansible.builtin.file:
     path: /etc/systemd/system/containerd.service.d
+    state: absent
+  register: containerd_proxy_dir
+
+- name: Create Registry Morrir Tree
+  ansible.builtin.file:
+    path: /etc/containerd/certs.d/_default
     state: directory
     owner: root
     group: root
-    mode: '0644'
-    recurse: true
-  register: containerd_proxy_dir
+    mode: '0755'
+    recurse: yes
+  register: containerd_registry_tree
 
-- name: Create Containerd Config File
-  when: containerd_proxy_dir is succeeded
-  ansible.builtin.template:
-    src: http_proxy.conf.j2
-    dest: /etc/systemd/system/containerd.service.d/http-proxy.conf
+- name: Create Default Registry Mirror
+  when: containerd_registry_tree is succeeded
+  ansible.builtin.copy:
+    dest: /etc/containerd/certs.d/_default/hosts.toml
     owner: root
     group: root
-    mode: '0644'
-  register: containerd_proxy
+    mode: '0755'
+    content: |
+      server = "https://docker-registry.slac.stanford.edu"
+
+      [host."docker-registry.slac.stanford.edu"]
+        capabilities = ["pull", "resolve"]
   notify: Reload containerd
 
 - name: Create crictl config file
