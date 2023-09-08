@@ -43,35 +43,61 @@
   register: containerd_default
   notify: Restart containerd
 
-- name: Ensure absent HTTP Proxy Folder
+- name: Ensure directory HTTP Proxy Folder
   ansible.builtin.file:
     path: /etc/systemd/system/containerd.service.d
-    state: absent
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
   register: containerd_proxy_dir
 
-- name: Create Registry Morrir Tree
-  ansible.builtin.file:
-    path: /etc/containerd/certs.d/_default
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
-    recurse: yes
-  register: containerd_registry_tree
-
-- name: Create Default Registry Mirror
-  when: containerd_registry_tree is succeeded
+- name: Create HTTP Proxy
+  when: containerd_proxy_dir is succeeded
   ansible.builtin.copy:
-    dest: /etc/containerd/certs.d/_default/hosts.toml
+    dest: /etc/systemd/system/containerd.service.d/http-proxy.conf
+    mode: '0644'
     owner: root
     group: root
-    mode: '0755'
     content: |
-      server = "https://docker-registry.slac.stanford.edu"
+      [Service]
+      Environment="HTTP_PROXY=http://sdfproxy.sdf.slac.stanford.edu:3128"
+      Environment="HTTPS_PROXY=http://sdfproxy.sdf.slac.stanford.edu:3128"
+      Environment="NO_PROXY=localhost,127.0.0.1,::1,10.0.0.0/8,192.168.0.0/16,134.79.0.0/16,172.16.0.0/12,.slac.stanford.edu,.sdf.slac.stanford.edu"
+  notify: Restart kubelet
 
-      [host."docker-registry.slac.stanford.edu"]
-        capabilities = ["pull", "resolve"]
-  notify: Reload containerd
+###
+## Not working yet with docker-registry
+###
+# - name: Ensure absent HTTP Proxy Folder
+#   ansible.builtin.file:
+#     path: /etc/systemd/system/containerd.service.d
+#     state: absent
+#   register: containerd_proxy_dir
+
+# - name: Create Registry Morrir Tree
+#   ansible.builtin.file:
+#     path: /etc/containerd/certs.d/_default
+#     state: directory
+#     owner: root
+#     group: root
+#     mode: '0755'
+#     recurse: yes
+#   register: containerd_registry_tree
+
+# - name: Create Default Registry Mirror
+#   when: containerd_registry_tree is succeeded
+#   ansible.builtin.copy:
+#     dest: /etc/containerd/certs.d/_default/hosts.toml
+#     owner: root
+#     group: root
+#     mode: '0755'
+#     content: |
+#       server = "https://docker-registry.slac.stanford.edu"
+
+#       [host."docker-registry.slac.stanford.edu"]
+#         capabilities = ["pull", "resolve"]
+#   notify: Reload containerd
 
 - name: Create crictl config file
   ansible.builtin.template:
@@ -90,7 +116,6 @@
     group: root
     mode: '0644'
   register: change_runtime
-  notify: Reload kubelet
 
 - name: Check if kubeadm has already run
   ansible.builtin.stat:
