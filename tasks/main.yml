@@ -111,7 +111,8 @@
 - name: Replace Container Runtime in Kubelet
   ansible.builtin.copy:
     dest: /var/lib/kubelet/kubeadm-flags.env
-    content: "{{ kubelet_kubeadm_args }}\n"
+    content: |
+      KUBELET_KUBEADM_ARGS="--container-runtime=remote  --container-runtime-endpoint=unix:///run/containerd/containerd.sock  --pod-infra-container-image=registry.k8s.io/pause:3.7 --image-gc-high-threshold=80 --image-gc-low-threshold=75"
     owner: root
     group: root
     mode: '0644'
