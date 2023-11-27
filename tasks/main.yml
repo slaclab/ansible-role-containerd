@@ -112,11 +112,20 @@
   ansible.builtin.copy:
     dest: /var/lib/kubelet/kubeadm-flags.env
     content: |
-      KUBELET_KUBEADM_ARGS="--container-runtime=remote  --container-runtime-endpoint=unix:///run/containerd/containerd.sock  --pod-infra-container-image=registry.k8s.io/pause:3.7 --image-gc-high-threshold=80 --image-gc-low-threshold=75 --max-pods 220"
+      KUBELET_KUBEADM_ARGS="--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
     owner: root
     group: root
     mode: '0644'
   register: change_runtime
+
+- name: Replace config.yaml file
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /var/lib/kubelet/config.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  register: config_conf
 
 - name: Check if kubeadm has already run
   ansible.builtin.stat:
@@ -128,7 +137,7 @@
   ansible.builtin.systemd:
     name: kubelet
     daemon_reload: true
-    state: started
+    state: restarted
     enabled: true
 
 - name: Ensure containerd is restarted immediately if necessary.
