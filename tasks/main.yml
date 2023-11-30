@@ -127,16 +127,17 @@
     mode: '0644'
   register: config_conf
 
-- name: Ensure control-plane server
-  ansible.builtin.lineinfile:
-    path: /etc/kubernetes/kubelet.conf
-    regexp: '^    server:'
-    line: '    server: https://sdfk8sm.sdf.slac.stanford.edu:6443'
-
 - name: Check if kubeadm has already run
   ansible.builtin.stat:
     path: "/etc/kubernetes/pki/ca.key"
   register: kubeadm_ca
+
+- name: Ensure control-plane server
+  when: kubeadm_ca.stat.exists
+  ansible.builtin.lineinfile:
+    path: /etc/kubernetes/kubelet.conf
+    regexp: '^    server:'
+    line: '    server: https://sdfk8sm.sdf.slac.stanford.edu:6443'
 
 - name: Enable and check kubelet service
   when: kubeadm_ca.stat.exists
