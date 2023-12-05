@@ -1,0 +1,15 @@
+[Unit]
+Description=kubelet: The Kubernetes Node Agent
+Documentation=https://kubernetes.io/docs/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStartPre=systemctl is-active fs-weka-k8s01-sdf\\x2dk8s01.mount
+ExecStart=/usr/bin/kubelet
+Restart=always
+StartLimitInterval=0
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -139,8 +139,19 @@
     regexp: '^    server:'
     line: '    server: https://sdfk8sm.sdf.slac.stanford.edu:6443'
 
+- name: Make kubelet service deoendant of weka mount
+  ansible.builtin.template:
+    src: kubelet.service.j2
+    dest: /usr/lib/systemd/system/kubelet.service
+    owner: root
+    group: root
+    mode: '0644'
+  register: kubelet_service
+
 - name: Enable and check kubelet service
-  when: kubeadm_ca.stat.exists
+  when:
+  - kubeadm_ca.stat.exists
+  - kubelet_service is succeeded
   ansible.builtin.systemd:
     name: kubelet
     daemon_reload: true
