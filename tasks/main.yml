@@ -141,7 +141,7 @@
 
 - name: Make kubelet service deoendant of weka mount
   ansible.builtin.template:
-    src: kubelet.service.j2
+    src: kubelet-service.j2
     dest: /usr/lib/systemd/system/kubelet.service
     owner: root
     group: root
