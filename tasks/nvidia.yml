@@ -1,0 +1,19 @@
+- name: Add nvidia repo if needed
+  ansible.builtin.command: 'curl -s https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo -o /etc/yum.repos.d/nvidia-container-toolkit.repo'
+  changed_when: false
+
+- name: Install nvidia toolkit
+  ansible.builtin.command: 'nvidia-ctk runtime configure --runtime=containerd'
+  changed_when: false
+  register: install_nvidia_ctk
+
+- name: Ensure Containerd Nvidia Config File
+  when:
+    - install_nvidia_ctk is succeeded
+  ansible.builtin.template:
+    src: config_nvidia.toml.j2
+    dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: '0644'
+  register: containerd_default

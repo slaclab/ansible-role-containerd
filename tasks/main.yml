@@ -33,7 +33,8 @@
   register: containerd_dir
 
 - name: Create Containerd Config File
-  when: containerd_dir is succeeded
+  when:
+    - ( nvidia_node | default('false')) == 'false'
   ansible.builtin.template:
     src: config.toml.j2
     dest: /etc/containerd/config.toml
@@ -42,6 +43,11 @@
     mode: '0644'
   register: containerd_default
   notify: Restart containerd
+
+- name: Add nvidia toolkit
+  ansible.builtin.include_tasks: nvidia.yml
+  when:
+    - ( nvidia_node | default('false')) == 'true'
 
 - name: Ensure directory HTTP Proxy Folder
   ansible.builtin.file:
