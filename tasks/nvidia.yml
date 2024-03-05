@@ -3,13 +3,21 @@
   changed_when: false
 
 - name: Install nvidia toolkit
+  ansible.builtin.dnf:
+    name: 'nvidia-container-toolkit'
+    state: present
+  register: install_nvidia_ctk
+
+- name: Configure nvidia toolkit for containerd
+  when:
+    - install_nvidia_ctk is succeeded
   ansible.builtin.command: 'nvidia-ctk runtime configure --runtime=containerd'
   changed_when: false
-  register: install_nvidia_ctk
+  register: configure_nvidia_ctk
 
 - name: Ensure Containerd Nvidia Config File
   when:
-    - install_nvidia_ctk is succeeded
+    - configure_nvidia_ctk is succeeded
   ansible.builtin.template:
     src: config_nvidia.toml.j2
     dest: /etc/containerd/config.toml
