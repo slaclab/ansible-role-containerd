@@ -25,3 +25,9 @@
     group: root
     mode: '0644'
   register: containerd_default
+
+- name: Create a symlink to ldconfig
+  ansible.builtin.file:
+    src: /sbin/ldconfig 
+    dest: /sbin/ldconfig.real
+    state: link
