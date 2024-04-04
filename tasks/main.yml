@@ -146,6 +146,8 @@
     line: '    server: https://sdfk8sm.sdf.slac.stanford.edu:6443'
 
 - name: Make kubelet service dependant of weka mount
+  when:
+    - ( weka_node | default('false')) == 'true'
   ansible.builtin.template:
     src: kubelet-service.j2
     dest: /usr/lib/systemd/system/kubelet.service

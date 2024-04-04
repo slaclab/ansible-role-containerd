@@ -1,4 +1,6 @@
+---
 apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
 authentication:
   anonymous:
     enabled: false
@@ -18,14 +20,16 @@ clusterDNS:
 clusterDomain: cluster.local
 cpuManagerReconcilePeriod: 0s
 evictionPressureTransitionPeriod: 0s
+evictionHard:
+  memory.available: "1Gi"
+  nodefs.available:  "5%"
+  nodefs.inodesFree: "5%"
+  imagefs.available: "5%"
 fileCheckFrequency: 0s
 healthzBindAddress: 127.0.0.1
 healthzPort: 10248
 httpCheckFrequency: 0s
 imageMinimumGCAge: 0s
-imageGCHighThresholdPercent: 90
-imageGCLowThresholdPercent: 85
-kind: KubeletConfiguration
 logging:
   flushFrequency: 0
   options:
